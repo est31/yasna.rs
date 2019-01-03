@@ -10,6 +10,10 @@
 use num::bigint::{BigUint, BigInt};
 #[cfg(feature = "bitvec")]
 use bit_vec::BitVec;
+#[cfg(feature = "time")]
+use chrono::NaiveDateTime;
+#[cfg(feature = "time")]
+use super::tags::TAG_GENERALIZEDTIME;
 
 use super::Tag;
 use super::tags::{TAG_BOOLEAN,TAG_INTEGER,TAG_BITSTRING,
@@ -565,6 +569,15 @@ impl<'a> DERWriter<'a> {
             }
             self.buf.push((subid & 127) as u8);
         }
+    }
+
+    #[cfg(feature = "time")]
+    /// Writes an ASN.1 GeneralizedTime
+    pub fn write_generalized_time(mut self, time: &NaiveDateTime) {
+        let string = time.format("%Y%m%d%H%M%SZ").to_string();
+        self.write_identifier(TAG_GENERALIZEDTIME, PC::Primitive);
+        self.write_length(string.len());
+        self.buf.extend_from_slice(string.as_bytes());
     }
 
     /// Writes ASN.1 SEQUENCE.
