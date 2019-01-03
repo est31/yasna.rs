@@ -12,7 +12,8 @@ use num_bigint::{BigUint, BigInt};
 use bit_vec::BitVec;
 
 use super::Tag;
-use super::tags::{TAG_BOOLEAN,TAG_INTEGER,TAG_OCTETSTRING,TAG_UTF8STRING};
+use super::tags::{TAG_BOOLEAN,TAG_INTEGER,TAG_BITSTRING,
+    TAG_OCTETSTRING,TAG_UTF8STRING};
 use super::tags::{TAG_NULL,TAG_OID,TAG_SEQUENCE,TAG_SET};
 use super::models::ObjectIdentifier;
 
@@ -438,6 +439,24 @@ impl<'a> DERWriter<'a> {
         self.write_length(1 + bytes.len());
         self.buf.push((8 * bytes.len() - len) as u8);
         self.buf.extend_from_slice(&bytes);
+    }
+
+    /// Writes `&[u8]` as an ASN.1 BIT STRING value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use yasna;
+    /// let der = yasna::construct_der(|writer| {
+    ///     writer.write_bit_string(0, b"Hello!")
+    /// });
+    /// assert_eq!(der, vec![3, 7, 0, 72, 101, 108, 108, 111, 33]);
+    /// ```
+    pub fn write_bit_string(mut self, unused_bits: u8, bytes: &[u8]) {
+        self.write_identifier(TAG_BITSTRING, PC::Primitive);
+        self.write_length(bytes.len() + 1);
+        self.buf.push(unused_bits);
+        self.buf.extend_from_slice(bytes);
     }
 
     /// Writes `&[u8]` as an ASN.1 OCTETSTRING value.
